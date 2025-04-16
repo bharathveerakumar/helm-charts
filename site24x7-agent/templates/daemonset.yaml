@@ -3,7 +3,6 @@ kind: DaemonSet
 metadata:
   name: {{ include "site24x7-agent.fullname" . }}-agent
   labels:
-    - app.kubernetes.io/name: {{ include "site24x7-agent.name" . }}
     {{- include "site24x7-agent.labels" . | nindent 4 }}
 spec:
   selector:
