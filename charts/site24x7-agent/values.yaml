@@ -1,0 +1,82 @@
+# Default values for site24x7-agent.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+nameOverride: "site24x7"
+fullnameOverride: "site24x7"
+
+deviceKey: "apiKey"
+
+openShift: false
+gkeAutopilot: false
+
+site24x7Agent:
+  # daemonset and pod annotations
+  annotations: {}
+  # updateStrategy for daemonset
+  updateStrategy: {}
+  # nodeSelector for daemonset pods
+  nodeSelector: {}
+  # list of tolerations to add to the daemonset pods
+  tolerations: []
+  # securityContext to be applied to the daemonset contaiers
+  securityContext: {}
+  # if not securityContext is provided, the appropriate context to be added to the daemonset containers based runAsNonRoot: true/false
+  nonRootSecurityContext: true
+  # daemonset container details
+  image:
+    repository: site24x7
+    name: docker-agent
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: release2000
+    imagePullSecrets: []
+  
+  # site24x7-agent container details
+  site24x7Agent:
+    # site24x7-agent container resources
+    resources:
+      limits:
+        cpu: 200m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    # site24x7-agent securityContext
+    securityContext: {}
+  
+site24x7KubeStateMetrics:
+  # kube-state-metrics enable/disable
+  create: true
+  # deployment and pod annotations
+  annotations: {}
+  # updateStrategy for deployment
+  updateStrategy: {}
+  # nodeSelector for deployment pods
+  nodeSelector: {}
+  # list of tolerations to add to the deployment pods
+  tolerations: []
+  # securityContext to be applied to the deployment contaiers
+  securityContext: {}
+  # deployment container details
+  image:
+    repository: registry.k8s.io
+    name: kube-state-metrics/kube-state-metrics
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: v2.9.2
+    imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: site24x7
+
+service:
+  type: ClusterIP
+  port: 80

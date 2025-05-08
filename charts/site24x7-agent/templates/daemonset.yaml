@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "site24x7-agent.fullname" . }}-agent
+  labels:
+    {{- include "site24x7-agent.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "site24x7-agent.selectorLabels" . | nindent 4 }}
+  updateStrategy:
+    {{- if not (empty .Values.site24x7Agent.updateStrategy) }}
+    {{- toYaml .Values.site24x7Agent.updateStrategy | nindent 4 }}
+    {{- else }}
+    type: RollingUpdate
+    {{- end }}
+  template:
+    metadata:
+      labels:      
+        {{- include "site24x7-agent.labels" . | nindent 8 }}
+      name: {{ include "site24x7-agent.fullname" . }}-agent
+    spec:
+      serviceAccountName: {{ include "site24x7-agent.fullname" . }}          
+      nodeSelector:
+        {{- if not (empty .Values.site24x7Agent.nodeSelector) -}}
+        {{- .Values.site24x7Agent.nodeSelector }}
+        {{- else -}}
+        kubernetes.io/os: linux
+        {{- end }}
+      tolerations:
+        {{- toYaml .Values.site24x7Agent.tolerations | nindent 8 }}
+      containers:
+        {{- include "site24x7-agent.container" . | nindent 8 }}
+      volumes:
+        {{- with .Values }}
+        - configMap:
+            name: site24x7
+            optional: true
+          name: clusterconfig
+        {{- if .site24x7Agent.nonRootSecurityContext }}
+        - emptyDir: {}
+          name: site24x7-agent
+        {{- end }}
+        {{- if not (and .site24x7Agent.nonRootSecurityContext .openShift) }}
+        - hostPath:
+            path: /proc
+          name: procfs
+        - hostPath:
+            path: /sys/
+          name: sysfs
+        - hostPath:
+            path: /var/
+          name: varfs
+        - hostPath:
+            path: /etc/
+          name: etcfs
+        {{- end }}
+        {{- end }}
