@@ -22,10 +22,37 @@ spec:
     spec:
       serviceAccountName: {{ include "site24x7-agent.fullname" . }}          
       nodeSelector:
-        {{- include "site24x7-agent.nodeSelector" . | nindent 8 }}
+        {{- if not (empty .Values.site24x7Agent.nodeSelector) -}}
+        {{- .Values.site24x7Agent.nodeSelector }}
+        {{- else -}}
+        kubernetes.io/os: linux
+        {{- end }}
       tolerations:
         {{- toYaml .Values.site24x7Agent.tolerations | nindent 8 }}
       containers:
         {{- include "site24x7-agent.container" . | nindent 8 }}
       volumes:
-        {{- include "site24x7-agent.volumes" . | nindent 8 }}
+        {{- with .Values }}
+        - configMap:
+            name: site24x7
+            optional: true
+          name: clusterconfig
+        {{- if .site24x7Agent.nonRootSecurityContext }}
+        - emptyDir: {}
+          name: site24x7-agent
+        {{- end }}
+        {{- if not (and .site24x7Agent.nonRootSecurityContext .openShift) }}
+        - hostPath:
+            path: /proc
+          name: procfs
+        - hostPath:
+            path: /sys/
+          name: sysfs
+        - hostPath:
+            path: /var/
+          name: varfs
+        - hostPath:
+            path: /etc/
+          name: etcfs
+        {{- end }}
+        {{- end }}
