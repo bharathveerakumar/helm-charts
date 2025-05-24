@@ -1,0 +1,23 @@
+{{- if .Values.site24x7KubeStateMetrics.create }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: site24x7-kube-state-metrics
+    app.kubernetes.io/version: 2.9.2
+  name: {{ include "site24x7-agent.fullname" . }}-kube-state-metrics
+  labels:
+    {{- include "site24x7-agent.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    - name: http-metrics
+      port: 8080
+      targetPort: http-metrics
+    - name: telemetry
+      port: 8081
+      targetPort: telemetry
+  selector:
+    app.kubernetes.io/name: site24x7-kube-state-metrics
+{{ end }}

@@ -32,7 +32,7 @@ spec:
       containers:
         {{- include "site24x7-agent.container" . | nindent 8 }}
       volumes:
-        {{- with .Values }}
+      {{- with .Values }}
         - configMap:
             name: site24x7
             optional: true
@@ -55,4 +55,4 @@ spec:
             path: /etc/
           name: etcfs
         {{- end }}
-        {{- end }}
+      {{- end }}
