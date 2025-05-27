@@ -13,6 +13,8 @@ openShift: false
 gkeAutopilot: false
 
 priorityClassName: ""
+# ConfigMap used for storing the site24x7 agent settings & configurations
+createConfigMap: true
 
 site24x7Agent:
   create: true
@@ -28,8 +30,8 @@ site24x7Agent:
   securityContext: {}
   # if not securityContext is provided, the appropriate context to be added to the daemonset containers based runAsNonRoot: true/false
   nonRootSecurityContext: true
-
-  createConfigMap: true
+  # applying control plane nodes default toleration
+  applyDefaultToleration: false
 
   # daemonset container details
   image:
@@ -84,6 +86,8 @@ site24x7KubeStateMetrics:
 site24x7ClusterAgent:
   # kube-state-metrics enable/disable
   create: true
+  # replicas
+  replicas: 1
   # deployment and pod annotations
   annotations: {}
   # updateStrategy for deployment

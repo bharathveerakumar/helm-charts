@@ -3,28 +3,58 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    {{- include "site24x7-agent.labels" . | nindent 4 }}
+    {{- include "site24x7KubeStateMetrics.labels" . | nindent 4 }}
   name: {{ include "site24x7-agent.fullname" . }}-kube-state-metrics
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "site24x7-agent.fullname" . }}-kube-state-metrics
+      {{- include "site24x7-agent.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "site24x7-agent.labels" . | nindent 8 }}
-        app.kubernetes.io/version: 2.9.2
+        {{- include "site24x7KubeStateMetrics.labels" . | nindent 8 }}
         app: site24x7-kube-state-metrics
     spec:
       tolerations:
         {{- toYaml .Values.site24x7KubeStateMetrics.tolerations | nindent 8 }}
       automountServiceAccountToken: true
       containers:
-        {{- include "site24x7.kube-state-metrics" . | nindent 8 }}
+        {{- with .Values.site24x7KubeStateMetrics.image }}
+      - image: {{ .repository | default "site24x7" }}/{{ .repository | default "site24x7" }}:{{ .tag }}
+        imagePullPolicy: {{ .pullPolicy }}
+        {{- end }}
+        name: site24x7-kube-state-metrics
+        livenessProbe:
+          httpGet:
+              path: /healthz
+              port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+              path: /
+              port: 8081
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 8080
+          name: http-metrics
+        - containerPort: 8081
+          name: telemetry
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1001080000
+          seccompProfile:
+            type: RuntimeDefault
       nodeSelector:
-        {{- if not (empty .Values.site24x7Agent.nodeSelector) }}
-        {{- .Values.site24x7Agent.nodeSelector }}
+        {{- if not (empty .Values.site24x7KubeStateMetrics.nodeSelector) }}
+        {{- toYaml .Values.site24x7KubeStateMetrics.nodeSelector | nindent 8 }}
         {{- else }}
         kubernetes.io/os: linux
         {{- end }}
